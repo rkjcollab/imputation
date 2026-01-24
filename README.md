@@ -1,44 +1,10 @@
-## TODOs
+## **imputation**
 
-* update below!
-* add instructions for getting TOPMed API key and/or manual submit?
-* add note that need to lift input data over to match reference panel
-    build otherwise won't be able to use fix strands code.
-* add checks that config values are only the allowable ones?
-* add more documentation to python functions
-* think could remove a config arg so that to_build is auto set based on chosen
-    imputation
-* not sure how to better handle relative paths within the pipeline directory?
-* add documentation about geno in all individuals followed by hwe in controls -
-    may lead to warning since subsetting increases variant missingness, but
-    think should be okay to ignore: https://groups.google.com/g/plink2-users/c/xjmPNfN0Swc/m/79_CAtMRBwAJ
-* better handle using imputationbot v1 for TOPmed and v2 for Michigan
-    * https://github.com/UW-GAC/primed-imputation/blob/main/register_token.sh
-    
-    
-## TODOs - after 10/29/25
-* discuss sex chromosome options, note that SEX column in PLINK file must be filled out
-* awknowledge that better than duplicate removal would be to consider fixing mismapped
-    SNPs using reference panel... potential future step
-* add note that create initial input should be run twice so that plot with sex checks
-    can be examined and thresholds can be adjusted
-* get job-id from log files
-* update create_initial_input log file to count all non-chr6 HWE (vs all chr HWE)
-* add note the pre-filtering, sex-checks done for all chr present in given file, but
-    SNP dedup, HWE and imputation prep only done for requested chr to prepare
-* add note that chrY can be prepared but not imputed
-* add concat_convert_to_plink as main option
-* split into two snakefiles - one pre- and one post-QC (would help with post QC paths
-    being different)
-* need to remove imputed files that don't want to keep
-* need to confirm download works for Michigan imputation
+*PLEASE NOTE that this repo is still under active development and testing.*
 
-
-## **imputation_snakemake**
-
-Pipeline for imputing autosomal genetic array data with hg19 or hg38 coordinates
-to the TOPMed r3 reference panel, the Michigian 1000 genomes phase 3 version 5
-reference panel, or the Michigan HLA four-digit multi-ethnic v1 or v2 panels.
+Snakemake-run pipeline for imputing autosomal genetic array data with hg19 or hg38
+coordinates to the TOPMed r3 reference panel, the Michigian 1000 genomes phase 3
+version 5 reference panel, or the Michigan HLA four-digit multi-ethnic v1 or v2 panels.
 
 Adapted from Michelle Daya's topmed_imputation pipeline.
 
@@ -125,7 +91,7 @@ for mixed populations. Either way, imputation results should not be affected.
 
 *TODO: add note about activating conda environment if set use_cont to false.*
 
-### Step 1
+### Step 2
 
 Use the "run_snakemake.sh" script to run the snakefile through initial data preparation and
 submission to the imputation server for QC only. This will create and upload the initial
@@ -149,9 +115,7 @@ updating all variant IDs to chr:pos:ref:alt, filtering by PLINK2 --maf (1e-6), -
 and --hwe (1e-20 for chr6 MHC region, 1e-6 for all other regions/chromosomes). A summary of
 each step is included in the log file.
 
-## Step 2
-
-*TODO: is the auto-download part working?*
+### Step 3
 
 Once the QC automatically submitted has run, you will receive an email. The pipeline here
 will download the results for you, modify the input based on the server QC, and resubmit
@@ -183,7 +147,7 @@ will produce the final post QC VCF files for imputation.
 *TO NOTE: if using Michigan imputation server, may need to move files out of*
 *subfolders manually.*
 
-## Step 3
+### Step 4
 
 Once the imputation has run, you will receive an email. The pipeline here
 will download the results for you, filter them, and create PLINK files. However,
@@ -206,3 +170,34 @@ bash run_snakemake.sh \
     -f /path/to/project/config.yml
 
 ```
+
+
+## Development Notes
+
+### TODOs
+
+* update below!
+* add instructions for getting TOPMed API key and/or manual submit?
+* add checks that config values are only the allowable ones?
+* add more documentation to python functions
+* think could remove a config arg so that to_build is auto set based on chosen imputation
+* not sure how to better handle relative paths within the pipeline directory?
+* add documentation about geno in all individuals followed by hwe in controls -
+    may lead to warning since subsetting increases variant missingness, but
+    think should be okay to ignore: https://groups.google.com/g/plink2-users/c/xjmPNfN0Swc/m/79_CAtMRBwAJ
+
+* discuss sex chromosome options, note that SEX column in PLINK file must be filled out
+* awknowledge that better than duplicate removal would be to consider fixing mismapped
+    SNPs using reference panel... potential future step
+* add note that create initial input should be run twice so that plot with sex checks
+    can be examined and thresholds can be adjusted
+* automate getting job-id from log files
+* add note the pre-filtering, sex-checks done for all chr present in given file, but
+    SNP dedup, HWE and imputation prep only done for requested chr to prepare
+* add note that chrY can be prepared but not imputed
+* split into two snakefiles - one pre- and one post-QC (would help with post QC paths
+    being different)
+* need to automate removal of imputed files that don't want to keep
+* need to confirm automated download works for Michigan imputation server
+* Update names for pre_qc (final input) vs. pre_qc_hg38 (after liftover but before
+    strang ambig removal)
