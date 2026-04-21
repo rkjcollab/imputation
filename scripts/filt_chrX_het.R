@@ -1,7 +1,6 @@
 #!/usr/bin/env Rscript
 
 library(argparse)
-suppressPackageStartupMessages(library(tidyverse))
 
 parser <- ArgumentParser(
   description = "Rscript filt_chrX_het.R run by create_initial_input.sh.")
@@ -21,37 +20,29 @@ args <- parser$parse_args()
 
 # chrX Heterozygosity ----------------------------------------------------------
 
-#TODO: previous method - delete?
-#TODO: temp for testing!
-# hetx <- read.delim(
-#   "/Users/slacksa/temp_data/daisy/new_tm_imp_test/pre_qc/tmp_chrX_het.hardy.x")
-# hetx <- read.delim(args$hetx)
-# 
-# # het = male non-A1 alelle count / (male non-A1 allele count + male A1 allele count)
-# hetx$het <- hetx$MALE_AX_CT/(hetx$MALE_AX_CT + hetx$MALE_A1_CT) * 100
-
 # Use PLINK1.9's .hh file:
   # Produced automatically when the input data contains heterozygous calls where
   # they shouldn't be possible (haploid chromosomes, male X/Y), or there are
   # nonmissing calls for nonmales on the Y chromosome. A text file with one line
   # per error (sorted primarily by variant ID, secondarily by sample ID) with
   # the following three fields: FID, IID, variant ID
-#TODO: temp for testing!
-# hh <- read.delim(
-#   "/Users/slacksa/temp_data/daisy/new_tm_imp_test/pre_qc/tmp_chrX_het_male_2.hh",
-#   col.names = c("FID", "IID", "ID"))
-# n_male <- 376
+
 hh <- read.delim(args$hh, col.names = c("FID", "IID", "ID"))
 n_male <- as.numeric(args$n_male)
 perc_het <- as.numeric(args$perc_het)
 
-hh_summ <- hh %>%
-  dplyr::group_by(ID) %>%
-  dplyr::summarize(ID_count = n()) %>%
-  dplyr::mutate(het_perc = ID_count / n_male)
+id_count <- as.data.frame(table(hh$ID), stringsAsFactors = FALSE)
+names(id_count) <- c("ID", "ID_count")
+id_count$ID_count <- as.integer(id_count$ID_count)
 
-hh_summ_rm <- hh_summ %>%
-  dplyr::filter(het_perc > (perc_het / 100))
+hh_summ <- data.frame(
+  ID = id_count$ID,
+  ID_count = id_count$ID_count,
+  het_perc = id_count$ID_count / n_male,
+  stringsAsFactors = FALSE
+)
+
+hh_summ_rm <- hh_summ[hh_summ$het_perc > (perc_het / 100), , drop = FALSE]
 hh_summ_rm_ct = length(unique(hh_summ_rm$ID))
 
 log_entry <- data.frame(
