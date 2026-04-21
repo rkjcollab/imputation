@@ -50,7 +50,7 @@ def get_args():
                         required=True,
                         help='Space-separated list of chromosomes "21 22".')
     parser.add_argument('--imp',
-                        choices = ['topmed', 'mich_hla_v1', 'mich_hla_v2', 'mich_1kg_p3_v5', 'mich_hrc'],
+                        choices = ['topmed', 'mich_hla_v1', 'mich_hla_v2', 'mich_1kg_p3_v5', 'mich_1kg_p3_30x', 'mich_hrc'],
                         required=True,
                         help='Imputation server to be used.')
     parser.add_argument('--build',
@@ -129,6 +129,8 @@ def submit_mich(args):
     # get which refpanel
     if args.imp == 'mich_1kg_p3_v5':
         refpanel = '1000g-phase-3-v5'
+    elif args.imp == 'mich_1kg_p3_30x':
+        refpanel = '1000g-phase3-deep'
     elif args.imp == 'mich_hla_v1':
         refpanel = 'multiethnic-hla-panel-4digit'
     elif args.imp == 'mich_hla_v2':
