@@ -165,13 +165,13 @@ echo -e "Summary\tData counts after pre-filtering\t${ct_samp_prefilt}\t${ct_var_
 
 # TO NOTE: this section is selected based on presence in input file,
 # not based on provided list of chr to process.
-if awk '{print $1}' "${plink_prefix}.bim" | grep -qw 'X'; then
+if cut -f1 "${out_dir}/pre_qc_prefilt.bim" | grep -Eq '^(X|chrX)$'; then
    echo "Optional: X chromosome sex-specific steps will be run."
    x_flag=1
 else
    x_flag=0
 fi
-if awk '{print $1}' "${plink_prefix}.bim" | grep -qw 'Y'; then
+if cut -f1 "${out_dir}/pre_qc_prefilt.bim" | grep -Eq '^(Y|chrY)$'; then
    echo "Optional: Y chromosome sex-specific steps will be run."
    y_flag=1
 else
@@ -426,7 +426,8 @@ plink2 --bfile "${out_dir}/tmp_pre_qc_sexcheck" \
    --out "${out_dir}/tmp_pre_qc_chr"
 check_file_exists "${out_dir}/tmp_pre_qc_chr.bim"
 ct_var_chr=$(awk 'END{print NR}' "${out_dir}/tmp_pre_qc_chr.bim")
-echo -e "Summary\tData counts after subset to given chr list\t${ct_samp_sexcheck}\t${ct_var_chr}" >> "$log_file"
+ct_samp_chr=$(awk 'END{print NR}' "${out_dir}/tmp_pre_qc_chr.fam")
+echo -e "Summary\tData counts after subset to given chr list\t${ct_samp_chr}\t${ct_var_chr}" >> "$log_file"
 
 # Deduplicate and set all variant IDs to chr:pos:ref:alt
 # First, if duplicate IDs have different missingness, remove the SNP with
@@ -471,6 +472,7 @@ orig_build_num=$(echo "$orig_build" | grep -o '[0-9]\+')
 to_build_num=$(echo "$to_build" | grep -o '[0-9]\+')
 
 # Perform HWE differentially by chr6 MHC
+hwe_subset=""
 for c in "${chr[@]}"; do
    if [ "$c" == "6" ]; then
       echo "Processing chr6 with HWE 1e-20."
@@ -493,7 +495,6 @@ for c in "${chr[@]}"; do
          --make-pgen --out "${out_dir}/tmp_non_mhc"
 
       # Set var to track who HWE calculated in
-      hwe_subset=""
       if [ -n "$hwe_filt_list" ]; then
          # Apply HWE filter only in given ID list
          hwe_subset="controls"
@@ -531,21 +532,6 @@ for c in "${chr[@]}"; do
          --keep-allele-order --allow-no-sex \
          --make-bed --out "${out_dir}/tmp_chr6"
 
-      # check_file_exists "${out_dir}/tmp_mhc.pvar"
-      # check_file_exists "${out_dir}/tmp_mhc_hwe.bim"
-      # ct_mhc=$(awk 'END{print NR}' "${out_dir}/tmp_mhc.pvar")
-      # ct_mhc_hwe=$(awk 'END{print NR}' "${out_dir}/tmp_mhc_hwe.bim")
-      # ct_mhc_hwe_rm=$((ct_mhc -1 - ct_mhc_hwe))  # -1 for .pvar header
-
-      # check_file_exists "${out_dir}/tmp_non_mhc.pvar"
-      # check_file_exists "${out_dir}/tmp_non_mhc_hwe.bim"
-      # ct_non_mhc=$(awk 'END{print NR}' "${out_dir}/tmp_non_mhc.pvar")
-      # ct_non_mhc_hwe=$(awk 'END{print NR}' "${out_dir}/tmp_non_mhc_hwe.bim")
-      # ct_non_mhc_hwe_rm=$((ct_non_mhc -1 - ct_non_mhc_hwe))  # -1 for .pvar header
-
-      # echo -e "HWE\tRemove chr6 MHC SNPs failing HWE (1e-20) in ${hwe_subset}\t()\t(${ct_mhc_hwe_rm})" >> "$log_file"
-      # echo -e "HWE\tRemove chr6 non-MHC SNPs failing HWE (1e-6) in ${hwe_subset}\t()\t(${ct_non_mhc_hwe_rm})" >> "$log_file"
-
    else
       echo "Processing chr$c with HWE 1e-6."
       plink2 --bfile "${out_dir}/pre_qc_chrpos_dedup" \
@@ -554,11 +540,13 @@ for c in "${chr[@]}"; do
 
       if [ -n "$hwe_filt_list" ]; then
          # Apply HWE filter only in given ID list
+         hwe_subset="controls"
          echo "Optional: applying HWE filter only in given ID list."
          plink2 --pfile "${out_dir}/tmp_chr${c}_no_hwe" \
             --hwe 1e-6 --nonfounders --keep "$hwe_filt_list" \
             --write-snplist --out "${out_dir}/tmp_chr${c}_hwe_list"
       else
+         hwe_subset="all"
          echo "Optional: applying HWE filter in all."
          plink2 --pfile "${out_dir}/tmp_chr${c}_no_hwe" \
             --hwe 1e-6 --nonfounders \
@@ -605,7 +593,7 @@ ct_hwe_rm=$((ct_var_dedup - ct_var_hwe))
 
 # If chr6 was processed, add to log file  and subtract it from summary of
 # rest of chr
-if check_file_exists "${out_dir}/tmp_mhc.pvar"; then
+if [ -f "${out_dir}/tmp_mhc.pvar" ]; then
    check_file_exists "${out_dir}/tmp_mhc_hwe.bim"
    ct_mhc=$(awk 'END{print NR}' "${out_dir}/tmp_mhc.pvar")
    ct_mhc_hwe=$(awk 'END{print NR}' "${out_dir}/tmp_mhc_hwe.bim")
