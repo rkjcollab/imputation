@@ -63,6 +63,9 @@ config_path=$(dirname "$config")
 plink_prefix=$(sed 's/#.*//' "$config" | grep "^plink_prefix:" | cut -d':' -f2 | tr -d ' "')
 plink_dir=$(dirname "$plink_prefix")
 
+id_list=$(sed 's/#.*//' "$config" | grep "^id_list:" | cut -d':' -f2 | tr -d ' "')
+id_list_dir=$(dirname "$id_list")
+
 id_list_hwe=$(sed 's/#.*//' "$config" | grep "^id_list_hwe:" | cut -d':' -f2 | tr -d ' "')
 id_list_hwe_dir=$(dirname "$id_list_hwe")
 
@@ -72,6 +75,7 @@ use_cont=$(sed 's/#.*//' "$config" | grep "^use_cont:" | cut -d':' -f2 | tr -d '
 
 # Get container paths set in config file - should not change
 plink_dir_cont=$(sed 's/#.*//' "$config" | grep "^plink_dir_cont:" | cut -d':' -f2 | tr -d ' "')
+id_list_dir_cont=$(sed 's/#.*//' "$config" | grep "^id_list_dir_cont:" | cut -d':' -f2 | tr -d ' "')
 id_list_hwe_dir_cont=$(sed 's/#.*//' "$config" | grep "^id_list_hwe_dir_cont:" | cut -d':' -f2 | tr -d ' "')
 out_dir_cont=$(sed 's/#.*//' "$config" | grep "^out_dir_cont:" | cut -d':' -f2 | tr -d ' "')
 repo_cont=$(sed 's/#.*//' "$config" | grep "^repo_cont:" | cut -d':' -f2 | tr -d ' "')
@@ -87,11 +91,12 @@ elif [ "$use_cont" = "true" ]; then
         --writable-tmpfs \
         --bind "${repo}:${repo_cont}" \
         --bind "${plink_dir}:${plink_dir_cont}" \
+        --bind "${id_list_dir}:${id_list_dir_cont}" \
         --bind "${id_list_hwe_dir}:${id_list_hwe_dir_cont}" \
         --bind "${config_path}:/proj_repo" \
         --bind "${out_dir}:${out_dir_cont}" \
         ${repo}/envs/env_imputation.sif \
-        snakemake --rerun-triggers mtime --snakefile ${repo}/Snakefile \
+        snakemake --rerun-triggers mtime --snakefile ${repo_cont}/Snakefile \
             --configfile /proj_repo/${config_name} \
             --cores "$n_cores" "$step" $dry_flag $unlock_flag
 

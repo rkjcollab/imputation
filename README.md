@@ -178,6 +178,7 @@ bash run_snakemake.sh \
 
 * update below!
 * add instructions for getting TOPMed API key and/or manual submit?
+* add instructions for key.py folder with API keys
 * add checks that config values are only the allowable ones?
 * add more documentation to python functions
 * think could remove a config arg so that to_build is auto set based on chosen imputation

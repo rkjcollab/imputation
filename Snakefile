@@ -90,7 +90,7 @@ rule create_initial_input:
         if id_list_hwe:
             id_list_hwe_name=Path(id_list_hwe).name
             if use_cont:
-                id_list_hwe_dir: str = config["id_list_dir_cont"]
+                id_list_hwe_dir: str = config["id_list_hwe_dir_cont"]
             else:
                 id_list_hwe_dir = Path(id_list_hwe).parent
             cmd += f" -h {id_list_hwe_dir}/{id_list_hwe_name}"

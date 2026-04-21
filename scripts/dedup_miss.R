@@ -1,7 +1,6 @@
 #!/usr/bin/env Rscript
 
 library(argparse)
-suppressPackageStartupMessages(library(tidyverse))
 
 parser <- ArgumentParser(
   description = "Rscript dedup_miss.R run by create_initial_input.sh.")
@@ -17,38 +16,44 @@ args <- parser$parse_args()
 
 # Duplicate variants -----------------------------------------------------------
 
-#TODO: temp for testing!
-# vmiss <- read.delim(
-#   "/Users/slacksa/temp_data/daisy/new_tm_imp_test/pre_qc/tmp_dedup.vmiss")
-# pvar <- read.delim(
-#   "/Users/slacksa/temp_data/daisy/new_tm_imp_test/pre_qc/tmp_dedup.pvar")
 vmiss <- read.delim(args$vmiss)
 pvar <- read.delim(args$pvar)
 
-merge <- inner_join(
-  pvar,
-  vmiss,
-  by = c("X.CHROM", "ID")) %>%
-  dplyr::mutate(chrpos = paste0(X.CHROM, ":", POS, ":", REF, ":", ALT))
+pvar$row_id <- seq_len(nrow(pvar))
+merge <- merge(pvar, vmiss, by = c("X.CHROM", "ID"), sort = FALSE)
+merge <- merge[order(merge$row_id), ]
+merge$row_id <- NULL
 
-merge_dup_list <- merge %>%
-  dplyr::filter(duplicated(chrpos))
-merge_dups <- merge %>%
-  dplyr::filter(chrpos %in% merge_dup_list$chrpos)
+merge$chrpos <- paste0(merge$X.CHROM, ":", merge$POS, ":", merge$REF, ":", merge$ALT)
+merge_dup_list <- merge$chrpos[duplicated(merge$chrpos)]
+merge_dups <- merge[merge$chrpos %in% merge_dup_list, ]
 
-merge_dups_filt <- merge_dups %>%
-  dplyr::group_by(chrpos) %>%
-  dplyr::filter(
-    any(F_MISS > 0),
-    length(unique(F_MISS)) > 1)
-
-merge_dups_keep <- merge_dups_filt %>%
-  slice_min(order_by = F_MISS, n = 1) %>%
-  ungroup()
-
-merge_dups_remove <- merge_dups_filt %>%
-  dplyr::filter(!ID %in% merge_dups_keep$ID)
-merge_dups_remove_ct <- n_distinct(merge_dups_remove$ID)
+if (nrow(merge_dups) > 0) {
+  merge_dups_filt <- do.call(
+    rbind,
+    lapply(split(merge_dups, merge_dups$chrpos), function(df) {
+      if (any(df$F_MISS > 0) && length(unique(df$F_MISS)) > 1) {
+        df
+      }
+    })
+  )
+  
+  merge_dups_keep <- do.call(
+    rbind,
+    lapply(split(merge_dups_filt, merge_dups_filt$chrpos), function(df) {
+      df[which.min(df$F_MISS), , drop = FALSE]
+    })
+  )
+  
+  merge_dups_remove <-
+    merge_dups_filt[!merge_dups_filt$ID %in% merge_dups_keep$ID, ]
+  merge_dups_remove_ct <- length(unique(merge_dups_remove$ID))
+  merge_dups_remove_exp <- merge_dups_remove$ID
+  
+} else {
+  merge_dups_remove_ct <- 0
+  merge_dups_remove_exp <- data.frame()
+}
 
 log_entry <- data.frame(
   Category = "SNP-Dedup",
@@ -61,7 +66,7 @@ log_entry <- data.frame(
 
 out_path <- paste0(gsub("\\.vmiss", "", args$vmiss), "_rm.txt")
 write.table(
-  merge_dups_remove$ID,
+  merge_dups_remove_exp,
   file = out_path,
   sep="\t",
   quote=F,
