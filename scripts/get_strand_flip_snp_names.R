@@ -18,6 +18,7 @@ get_strand_flip_snp_names <- function(pre_qc_dir, post_qc_dir, imp_server) {
   
   # Add column with chr:pos for all variants
   if (imp_server == "topmed") {
+    print("tm")
     snp.excl$chr <- 
       gsub("chr", "", unlist(strsplit(snp.excl$X.Position, split=":"))[seq(1,dim(snp.excl)[1]*4,4)])
     snp.excl$pos <-
@@ -35,17 +36,27 @@ get_strand_flip_snp_names <- function(pre_qc_dir, post_qc_dir, imp_server) {
                     stringsAsFactors = F)
   bim$chr.pos <- paste0(bim$V1, ":", bim$V4)
   
+  # Make sure presence/absence of chr matches bim file
+  if (any(grepl("^chr", bim$V1))) {
+    snp.excl$chr.pos <- ifelse(
+      any(grepl("^chr", snp.excl$chr.pos)),
+      snp.excl$chr.pos,
+      paste0("chr", snp.excl$chr.pos))
+  } else {
+    snp.excl$chr.pos <- gsub("^chr", "", snp.excl$chr.pos)
+  }
+  
   # Add varID names to snp.excl by chr:pos
-  merge <- merge(snp.excl, bim, by = c("chr.pos"))
+  merged <- merge(snp.excl, bim, by = c("chr.pos"))
   
   # Get strand flips & strand flip and allele switch
-  snp.frame.flip.as <- merge[grep("Strand flip", merge$FilterType),]
+  snp.frame.flip.as <- merged[grep("Strand flip", merged$FilterType),]
   
   # Remove strand flip & strand flip and allele switch from from snp.excl
-  merge.to.excl <- merge[!merge$FilterType %in% snp.frame.flip.as$FilterType,]
+  merged.to.excl <- merged[!merged$FilterType %in% snp.frame.flip.as$FilterType,]
   
   # Get allele switch only snps
-  snp.frame.as <- merge.to.excl[grep("Allele switch", merge.to.excl$FilterType),]
+  snp.frame.as <- merged.to.excl[grep("Allele switch", merged.to.excl$FilterType),]
   
   ### Handle strand flips & strand flip and allele switches
   # For both strand flip & strand flip and allele switch, flip strand
