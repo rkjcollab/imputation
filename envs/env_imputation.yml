@@ -7,7 +7,7 @@ dependencies:
   - python=3.11
   - snakemake
   - conda-forge::yq
-  - conda-forge::p7zip=16.02
+  - conda-forge::7zip=26.00
   - bioconda::bcftools=1.22
   - bioconda::crossmap=0.7.3
   - bioconda::vcftools=0.1.17
@@ -17,3 +17,4 @@ dependencies:
   - conda-forge::r-essentials
   - conda-forge::r-argparse
   - conda-forge::jq
+  - conda-forge::aria2

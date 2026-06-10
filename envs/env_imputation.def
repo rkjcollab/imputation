@@ -28,7 +28,7 @@ From: python:3.11-slim-bookworm
         tabix \
         bcftools \
         vcftools \
-        p7zip-full \
+        7zip \
         curl \
         graphviz \
         openjdk-17-jdk \
