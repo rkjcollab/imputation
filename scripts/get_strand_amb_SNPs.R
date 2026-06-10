@@ -1,15 +1,5 @@
 #!/usr/bin/env Rscript
 
-library(argparse)
-
-parser <- ArgumentParser(
-  description = "Rscript update_pos.R run by create_initial_input.sh.")
-
-parser$add_argument(
-  "-b", "--bim", help="PLINK1.9 .bim file path (required)", required=TRUE)
-
-args <- parser$parse_args()
-
 # Script is called by create_initial_input.sh. First trailing
 # arg should be file path to .bim after crossover (if done) or
 # after removal of SNPs with duplicate positions. Writes new
@@ -26,4 +16,19 @@ get_strand_amb_SNPs <- function(bim_file) {
               sep="\t", quote=F, row.names=F, col.names=F)
 }
 
-get_strand_amb_SNPs(args$bim)
+main <- function() {
+  library(argparse)
+
+  parser <- ArgumentParser(
+    description = "Rscript update_pos.R run by create_initial_input.sh.")
+
+  parser$add_argument(
+    "-b", "--bim", help="PLINK1.9 .bim file path (required)", required=TRUE)
+
+  args <- parser$parse_args()
+  get_strand_amb_SNPs(args$bim)
+}
+
+if (sys.nframe() == 0) {
+  main()
+}
