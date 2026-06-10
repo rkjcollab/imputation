@@ -14,4 +14,4 @@ while getopts d:p:c: opt; do
 done
 
 cd $impute_dir
-7z e chr_${chr}.zip -y -p$zip_password
+7zz e chr_${chr}.zip -y -p$zip_password
