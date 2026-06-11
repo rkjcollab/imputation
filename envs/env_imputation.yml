@@ -16,5 +16,8 @@ dependencies:
   - conda-forge::r-base
   - conda-forge::r-essentials
   - conda-forge::r-argparse
+  - conda-forge::r-lintr
+  - conda-forge::r-styler
   - conda-forge::jq
   - conda-forge::aria2
+  - conda-forge::pre-commit

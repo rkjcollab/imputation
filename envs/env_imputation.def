@@ -25,6 +25,7 @@ From: python:3.11-slim-bookworm
         python3 \
         python3-pip \
         r-base \
+        libxml2-dev \
         tabix \
         bcftools \
         vcftools \
@@ -44,9 +45,15 @@ From: python:3.11-slim-bookworm
 
     # Pulp - version pinned to 2.7.0 due to list solvers bug
     pip3 install pulp==2.7.0
-    
+
+    # Precommit hooks
+    pip3 install pre-commit
+
     # Install R argparse
     Rscript -e 'install.packages("argparse", repos="https://cloud.r-project.org/")'
+    Rscript -e 'install.packages("styler", repos="https://cloud.r-project.org/")'
+    Rscript -e 'install.packages("lintr", repos="https://cloud.r-project.org/")'
+
 
     # plink 1.9
     wget https://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_latest.zip  && \
@@ -76,3 +83,7 @@ From: python:3.11-slim-bookworm
     bcftools --version | head -n 1
     echo "Check Snakemake version:"
     snakemake --version
+    echo "Check R lintr version:"
+    Rscript -e 'library(lintr); cat(as.character(packageVersion("lintr")), "\n")'
+    echo "Check R styler version:"
+    Rscript -e 'library(styler); cat(as.character(packageVersion("styler")), "\n")'
