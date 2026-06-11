@@ -1,0 +1,14 @@
+repos:
+  - repo: local
+    hooks:
+      - id: styler
+        name: styler
+        entry: Rscript -e "styler::style_dir('.', file, filetype = 'R')"
+        language: system
+        files: \.[Rr]$
+
+      - id: lintr
+        name: lintr
+        entry: Rscript -e "quit(status = as.integer(length(lintr::lint_dir('.')) > 0))"
+        language: system
+        files: \.[Rr]$
