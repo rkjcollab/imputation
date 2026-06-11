@@ -1,14 +1,17 @@
 repos:
-  - repo: local
+  # Cross-language hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
     hooks:
-      - id: styler
-        name: styler
-        entry: Rscript -e "styler::style_dir('.', file, filetype = 'R')"
-        language: system
-        files: \.[Rr]$
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
 
+  # R hooks
+  - repo: https://github.com/lorenzwalthert/precommit
+    rev: v0.4.3
+    hooks:
+      - id: style-files
+      - id: parsable-R
       - id: lintr
-        name: lintr
-        entry: Rscript -e "quit(status = as.integer(length(lintr::lint_dir('.')) > 0))"
-        language: system
-        files: \.[Rr]$
