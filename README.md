@@ -180,7 +180,7 @@ TODO: add detail for this. CI/CD on GitHub will check styler and linter.
 Recommend using pre commit hook locally first always:
 
 ```
-pip install pre-commit
+## pip install pre-commit # not needed since in conda env?
 pre-commit install
 
 ```
