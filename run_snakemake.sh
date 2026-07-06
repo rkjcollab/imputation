@@ -85,6 +85,7 @@ if [ "$use_cont" = "false" ]; then
     snakemake --rerun-triggers mtime --snakefile ${repo}/Snakefile \
         --configfile ${config_path}/${config_name} \
         --cores "$n_cores" "$step" $dry_flag $unlock_flag
+
 elif [ "$use_cont" = "true" ]; then
     # Run snakemake in container (default)
     apptainer exec \

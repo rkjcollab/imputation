@@ -15,7 +15,7 @@ Adapted from Michelle Daya's topmed_imputation pipeline.
 To build apptainer on an x86_64 operating system, from the top level of this
 repository run:
 
-``` 
+```
 apptainer build envs/topmed_imputation.sif envs/topmed_imputation.def
 
 ```
@@ -151,7 +151,7 @@ will produce the final post QC VCF files for imputation.
 
 Once the imputation has run, you will receive an email. The pipeline here
 will download the results for you, filter them, and create PLINK files. However,
-you must log onto the imputation server, get the updated job ID, and add it and 
+you must log onto the imputation server, get the updated job ID, and add it and
 the zip password that was emailed to you to the project-specific config.yml first:
 
 ```
@@ -173,6 +173,17 @@ bash run_snakemake.sh \
 
 
 ## Development Notes
+
+### CI/CD
+
+TODO: add detail for this. CI/CD on GitHub will check styler and linter.
+Recommend using pre commit hook locally first always:
+
+```
+## pip install pre-commit # not needed since in conda env?
+pre-commit install
+
+```
 
 ### TODOs
 

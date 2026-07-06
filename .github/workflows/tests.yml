@@ -1,0 +1,52 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  run_unit_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install and cache R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::testthat
+
+      - name: Run R unit tests
+        run: |
+          Rscript -e 'testthat::test_dir("tests/testthat", reporter = "summary")'
+
+  run_style_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install and cache R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::lintr
+            any::styler
+
+      - name: Check R formatting
+        run: |
+          Rscript -e 'styler::style_dir(".", filetype = "R", dry = "fail")'
+
+      - name: Lint R files
+        run: |
+          Rscript -e 'lints <- lintr::lint_dir("."); print(lints); quit(status = as.integer(length(lints) > 0))'

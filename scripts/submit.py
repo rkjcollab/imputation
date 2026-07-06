@@ -108,7 +108,7 @@ def submit_topmed(args):
         vcf_path = os.path.join(args.dir, f"chr{c}_{version}_qc.vcf.gz")
         vcf_files.append(('files', open(vcf_path, 'rb')))
 
-    endpoint = "/jobs/submit/imputationserver"
+    endpoint = "/jobs/submit/imputationserver2"
     resp = requests.post(base + endpoint, files=vcf_files, data=data, headers=headers)
 
     output = resp.json()
