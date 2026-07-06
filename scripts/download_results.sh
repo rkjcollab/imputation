@@ -37,12 +37,12 @@ curl -s -H "X-Auth-Token: $key" \
   "${host_i}/jobs/${job_id}" > ${out_dir}/job_metadata.json
 
 # Use json to make downloadable links
-  #TODO: this pattern works for TOPMed, need to confirm for Mich!
 jq -r --arg host "$host_d" '.outputParams[].files[] | "\($host)/share/results/\(.hash)/\(.name)"' \
   ${out_dir}/job_metadata.json > ${out_dir}/job_download_links.txt
 
 # Download with aria2 (recommended by server)
 # Raise --min-split-size to avoid hitting imputation server download limit
+#TODO: may need to switch back to wget or curl, this is not working well
 aria2c \
-  -j 4 -x 4 --split 4 --min-split-size=1000M --continue=true \
+  -j 2 -x 2 --split=2 --min-split-size=500M --continue=true \
   -i "${out_dir}/job_download_links.txt" -d "${out_dir}"
