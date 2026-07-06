@@ -54,7 +54,6 @@ From: python:3.11-slim-bookworm
     Rscript -e 'install.packages("styler", repos="https://cloud.r-project.org/")'
     Rscript -e 'install.packages("lintr", repos="https://cloud.r-project.org/")'
 
-
     # plink 1.9
     wget https://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_latest.zip  && \
         unzip plink_linux_x86_64_latest.zip -d plink_linux_x86_64_latest/  && \
