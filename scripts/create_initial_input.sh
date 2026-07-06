@@ -220,13 +220,25 @@ filt_chrX_male_het() {
    local perc_het="$2"
    local bfile_out="$3"
 
-   plink2 --bfile "${bfile}" \
-      --chr X \
-      --split-par "$orig_build" \
-      --filter-males \
-      --nonfounders \
-      --make-bed \
-      --out "${bfile_out}_subset"
+   # Check if --split-par already run on input
+   if awk '$1 == "PAR1" || $1 == "PAR2" {print; exit}' "${bfile}.bim" | grep -q .; then
+      # Input already had --split-par run
+      plink2 --bfile "${bfile}" \
+         --chr X \
+         --filter-males \
+         --nonfounders \
+         --make-bed \
+         --out "${bfile_out}_subset"
+   else
+      # Input didn't have --split-par run yet, so run now
+      plink2 --bfile "${bfile}" \
+         --chr X \
+         --split-par "$orig_build" \
+         --filter-males \
+         --nonfounders \
+         --make-bed \
+         --out "${bfile_out}_subset"
+   fi
 
    # Pass through PLINK1.9 to generate .hh file
    plink --bfile "${bfile_out}_subset" \
@@ -331,11 +343,23 @@ if [ "$x_flag" -eq 1 ]; then
    echo "Warning: the plot sexcheck_plot.png should be used to adjust the "
    echo "default thresholds based on each dataset's distribution."
 
-   plink2 --bfile "${out_dir}/tmp_chrY_female_miss_rm" \
-      --split-par "$orig_build" \
-      --check-sex min-male-xf=${sexcheck[0]} max-female-xf=${sexcheck[1]} \
-      --nonfounders \
-      --out "${out_dir}/tmp_sexcheck"
+
+   # Check if --split-par already run
+   if awk '$1 == "PAR1" || $1 == "PAR2" {print; exit}' "${out_dir}/tmp_chrY_female_miss_rm.bim" | grep -q .; then
+      # Input already had --split-par run
+      plink2 --bfile "${out_dir}/tmp_chrY_female_miss_rm" \
+         --check-sex min-male-xf=${sexcheck[0]} max-female-xf=${sexcheck[1]} \
+         --nonfounders \
+         --out "${out_dir}/tmp_sexcheck"
+
+   else
+      # Input didn't have --split-par run yet, so run now
+      plink2 --bfile "${out_dir}/tmp_chrY_female_miss_rm" \
+         --split-par "$orig_build" \
+         --check-sex min-male-xf=${sexcheck[0]} max-female-xf=${sexcheck[1]} \
+         --nonfounders \
+         --out "${out_dir}/tmp_sexcheck"
+   fi
 
    check_file_exists "${out_dir}/tmp_sexcheck.sexcheck"
    Rscript ${code_dir}/scripts/sex_check.R \
@@ -525,7 +549,7 @@ for c in "${chr[@]}"; do
       plink2 --pfile "${out_dir}/tmp_non_mhc" \
          --extract "${out_dir}/tmp_non_mhc_hwe_list.snplist" \
          --make-bed --out "${out_dir}/tmp_non_mhc_hwe"
-   
+
       # Merge chr6 back together
       plink --bfile "${out_dir}/tmp_mhc_hwe" \
          --bmerge "${out_dir}/tmp_non_mhc_hwe" \
@@ -577,7 +601,7 @@ if [ "${#chr[@]}" -gt 1 ]; then
       --merge-list "$merge_list" \
       --keep-allele-order --allow-no-sex --output-chr MT \
       --make-bed --out "${out_dir}/pre_qc_hwe"
-   
+
 else
    echo "Processing only one chr."
    plink --bfile "${out_dir}/tmp_chr${chr[0]}" \
@@ -621,7 +645,7 @@ echo -e "Summary\tData counts after HWE\t${ct_samp_hwe}\t${ct_var_hwe}" >> "$log
 if [ "$orig_build_num" != "$to_build_num" ]; then
    echo "Optional: Lifting over from ${orig_build} to ${to_build}."
 
-   # Create bed file to crossover from hg19 to hg38 
+   # Create bed file to crossover from hg19 to hg38
    cat "${out_dir}/pre_qc_hwe.bim" | cut -f1 | sed 's/^/chr/' > "${out_dir}/tmp_c1.txt"
    cat "${out_dir}/pre_qc_hwe.bim" | cut -f4 > "${out_dir}/tmp_c2.txt"
    cat "${out_dir}/pre_qc_hwe.bim" | cut -f4 > "${out_dir}/tmp_c3.txt"
@@ -657,7 +681,7 @@ if [ "$orig_build_num" != "$to_build_num" ]; then
    cp "${out_dir}/pre_qc_hg${to_build_num}.bim" "${out_dir}/tmp_liftover.bim"
    cp "${out_dir}/pre_qc_hg${to_build_num}.bed" "${out_dir}/tmp_liftover.bed"
    cp "${out_dir}/pre_qc_hg${to_build_num}.fam" "${out_dir}/tmp_liftover.fam"
-else 
+else
    echo "Optional: Not lifting over."
    cp "${out_dir}/pre_qc_hwe.bim" "${out_dir}/tmp_liftover.bim"
    cp "${out_dir}/pre_qc_hwe.bed" "${out_dir}/tmp_liftover.bed"
