@@ -8,6 +8,11 @@
 library(argparse)
 
 get_strand_amb_SNPs <- function(bim_file) { # nolint: object_name_linter
+  # Throw error if bim file is empty
+  if (file.size(bim_file) == 0) {
+    stop("BIM file is empty")
+  }
+
   bim <- read.table(bim_file, stringsAsFactors = FALSE)
   snps <- bim$V2[
     ((bim$V5 == "A") & (bim$V6 == "T")) |
