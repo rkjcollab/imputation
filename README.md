@@ -174,6 +174,15 @@ bash run_snakemake.sh \
 
 ## Development Notes
 
+### Testing
+
+Run tests locally with:
+
+```
+Rscript -e 'testthat::test_dir("tests/testthat")'
+
+```
+
 ### CI/CD
 
 TODO: add detail for this. CI/CD on GitHub will check styler and linter.
