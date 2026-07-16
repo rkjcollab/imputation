@@ -1,50 +1,73 @@
 #!/usr/bin/env Rscript
 
+# Script is called by create_initial_input. Requires PLINK2 .afreq file and
+# path to log file. Removes monomorphic SNPs.
+
 library(argparse)
 
-parser <- ArgumentParser(
-  description = "Rscript filt_mono.R run by create_initial_input.sh.")
+filt_mono <- function(afreq_file, log_file) {
+  # Throw error if .afreq file is empty
+  if (file.size(afreq_file) == 0) {
+    stop("PLINK2 .afreq file is empty")
+  }
 
-parser$add_argument(
-  "-a", "--afreq", help="PLINK2 .afreq file path (required)", required=TRUE)
-parser$add_argument(
-  "-l", "--log", help="Create initial input log file (required)", required=TRUE)
+  afreq <- read.delim(afreq_file)
 
-args <- parser$parse_args()
+  # Throw error if ALT_FREQS column is missing
+  if (!"ALT_FREQS" %in% colnames(afreq)) {
+    stop("ALT_FREQS column is missing from .afreq file")
+  }
 
-# Monomorphic variants ---------------------------------------------------------
+  afreq_rm <- afreq[afreq$ALT_FREQS == 0, ]
+  afreq_rm_ct <- nrow(afreq_rm)
 
-#TODO: temp for testing!
-# afreq <- read.delim(
-#   "/Users/slacksa/temp_data/daisy/new_tm_imp_test/pre_qc/tmp_miss_mono.afreq")
-afreq <- read.delim(args$afreq)
+  log_entry <- data.frame(
+    Category = "Pre-Filtering",
+    Description = "Remove monomorphic SNPs",
+    Samples = "()",
+    SNPs = paste0("(", afreq_rm_ct, ")"),
+    stringsAsFactors = FALSE
+  )
 
-afreq_rm <- afreq[afreq$ALT_FREQS == 0, ]
-afreq_rm_ct <- nrow(afreq_rm)
+  path <- dirname(afreq_file)
+  write.table(
+    afreq_rm$ID,
+    file = paste0(path, "/tmp_mono_rm.txt"),
+    sep = "\t",
+    quote = FALSE,
+    row.names = FALSE,
+    col.names = FALSE
+  )
 
-log_entry <- data.frame(
-  Category = "Pre-Filtering",
-  Description = "Remove monomorphic SNPs",
-  Samples = "()",
-  SNPs = paste0("(", afreq_rm_ct, ")"),
-  stringsAsFactors = FALSE)
+  write.table(
+    log_entry,
+    file = log_file,
+    sep = "\t",
+    quote = FALSE,
+    row.names = FALSE,
+    col.names = FALSE,
+    append = TRUE
+  )
+}
 
-# Write out --------------------------------------------------------------------
+main <- function() {
+  parser <- ArgumentParser(
+    description = "Rscript filt_mono.R run by create_initial_input.sh."
+  )
 
-path <- dirname(args$afreq)
-write.table(
-  afreq_rm$ID,
-  file = paste0(path, "/tmp_mono_rm.txt"),
-  sep="\t",
-  quote=F,
-  row.names=F,
-  col.names=F)
+  parser$add_argument(
+    "-a", "--afreq",
+    help = "PLINK2 .afreq file path (required)", required = TRUE
+  )
+  parser$add_argument(
+    "-l", "--log",
+    help = "Create initial input log file (required)", required = TRUE
+  )
 
-write.table(
-  log_entry,
-  file = args$log,
-  sep = "\t",
-  quote = F,
-  row.names = F,
-  col.names = F,
-  append = T)
+  args <- parser$parse_args()
+  filt_mono(args$afreq, args$log)
+}
+
+if (sys.nframe() == 0) {
+  main()
+}
