@@ -74,7 +74,7 @@ repo=$(sed 's/#.*//' "$config" | grep "^repo:" | cut -d':' -f2 | tr -d ' "')
 use_cont=$(sed 's/#.*//' "$config" | grep "^use_cont:" | cut -d':' -f2 | tr -d ' "')
 cont_engine=$(sed 's/#.*//' "$config" | grep "^cont_engine:" | cut -d':' -f2 | tr -d ' "')
 cont_engine=${cont_engine:-apptainer}
-docker_image="ghcr.io/rkjcollab/imputation:1.1.0"  # image matching this release
+docker_image="ghcr.io/rkjcollab/imputation:1.1.1"  # image matching this release
 
 # Container paths - fixed here rather than in the config file, and passed to
 # snakemake with --config since the Snakefile needs them inside the container
@@ -118,6 +118,7 @@ elif [ "$use_cont" = "true" ] && [ "$cont_engine" = "docker" ]; then
         --platform linux/amd64 \
         --user "$(id -u):$(id -g)" \
         --env HOME=/tmp \
+        --env USER="$(id -un)" \
         -v "${repo_abs}:${repo_cont}" \
         -v "${plink_dir_abs}:${plink_dir_cont}" \
         ${id_list_mounts[@]+"${id_list_mounts[@]}"} \
