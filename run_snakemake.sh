@@ -72,13 +72,22 @@ id_list_hwe_dir=$(dirname "$id_list_hwe")
 out_dir=$(sed 's/#.*//' "$config" | grep "^out_dir:" | cut -d':' -f2 | tr -d ' "')
 repo=$(sed 's/#.*//' "$config" | grep "^repo:" | cut -d':' -f2 | tr -d ' "')
 use_cont=$(sed 's/#.*//' "$config" | grep "^use_cont:" | cut -d':' -f2 | tr -d ' "')
+cont_engine=$(sed 's/#.*//' "$config" | grep "^cont_engine:" | cut -d':' -f2 | tr -d ' "')
+cont_engine=${cont_engine:-apptainer}
+docker_image="ghcr.io/rkjcollab/imputation:1.1.0"  # image matching this release
 
-# Get container paths set in config file - should not change
-plink_dir_cont=$(sed 's/#.*//' "$config" | grep "^plink_dir_cont:" | cut -d':' -f2 | tr -d ' "')
-id_list_dir_cont=$(sed 's/#.*//' "$config" | grep "^id_list_dir_cont:" | cut -d':' -f2 | tr -d ' "')
-id_list_hwe_dir_cont=$(sed 's/#.*//' "$config" | grep "^id_list_hwe_dir_cont:" | cut -d':' -f2 | tr -d ' "')
-out_dir_cont=$(sed 's/#.*//' "$config" | grep "^out_dir_cont:" | cut -d':' -f2 | tr -d ' "')
-repo_cont=$(sed 's/#.*//' "$config" | grep "^repo_cont:" | cut -d':' -f2 | tr -d ' "')
+# Container paths - fixed here rather than in the config file, and passed to
+# snakemake with --config since the Snakefile needs them inside the container
+plink_dir_cont="/input_data"
+id_list_dir_cont="/id_list"
+id_list_hwe_dir_cont="/id_list_hwe"
+out_dir_cont="/output_data"
+repo_cont="/repo"
+cont_config=(--config \
+    "plink_dir_cont=${plink_dir_cont}" \
+    "id_list_dir_cont=${id_list_dir_cont}" \
+    "id_list_hwe_dir_cont=${id_list_hwe_dir_cont}" \
+    "out_dir_cont=${out_dir_cont}")
 
 if [ "$use_cont" = "false" ]; then
     # Run snakemake on local machine using provided conda environment
@@ -86,8 +95,43 @@ if [ "$use_cont" = "false" ]; then
         --configfile ${config_path}/${config_name} \
         --cores "$n_cores" "$step" $dry_flag $unlock_flag
 
-elif [ "$use_cont" = "true" ]; then
-    # Run snakemake in container (default)
+elif [ "$use_cont" = "true" ] && [ "$cont_engine" = "docker" ]; then
+    # Run snakemake in Docker container. Docker requires absolute host paths,
+    # so resolve them first, and only mount optional ID lists if given.
+    abs_path() { (cd "$1" && pwd); }
+    repo_abs=$(abs_path "$repo")
+    plink_dir_abs=$(abs_path "$plink_dir")
+    config_path_abs=$(abs_path "$config_path")
+    out_dir_abs=$(abs_path "$out_dir")
+
+    id_list_mounts=()
+    if [ -n "$id_list" ]; then
+        id_list_mounts+=(-v "$(abs_path "$id_list_dir"):${id_list_dir_cont}")
+    fi
+    if [ -n "$id_list_hwe" ]; then
+        id_list_mounts+=(-v "$(abs_path "$id_list_hwe_dir"):${id_list_hwe_dir_cont}")
+    fi
+
+    # Run as host user so output is not owned by root, and mount the working
+    # dir as apptainer does so .snakemake is written to the same place
+    docker run --rm \
+        --platform linux/amd64 \
+        --user "$(id -u):$(id -g)" \
+        --env HOME=/tmp \
+        -v "${repo_abs}:${repo_cont}" \
+        -v "${plink_dir_abs}:${plink_dir_cont}" \
+        ${id_list_mounts[@]+"${id_list_mounts[@]}"} \
+        -v "${config_path_abs}:/proj_repo" \
+        -v "${out_dir_abs}:${out_dir_cont}" \
+        -v "${PWD}:${PWD}" \
+        -w "${PWD}" \
+        "$docker_image" \
+        snakemake --rerun-triggers mtime --snakefile ${repo_cont}/Snakefile \
+            --configfile /proj_repo/${config_name} "${cont_config[@]}" \
+            --cores "$n_cores" "$step" $dry_flag $unlock_flag
+
+elif [ "$use_cont" = "true" ] && [ "$cont_engine" = "apptainer" ]; then
+    # Run snakemake in apptainer container (default)
     apptainer exec \
         --writable-tmpfs \
         --bind "${repo}:${repo_cont}" \
@@ -98,10 +142,10 @@ elif [ "$use_cont" = "true" ]; then
         --bind "${out_dir}:${out_dir_cont}" \
         ${repo}/envs/env_imputation.sif \
         snakemake --rerun-triggers mtime --snakefile ${repo_cont}/Snakefile \
-            --configfile /proj_repo/${config_name} \
+            --configfile /proj_repo/${config_name} "${cont_config[@]}" \
             --cores "$n_cores" "$step" $dry_flag $unlock_flag
 
 else
-    echo "Config file use_cont must be either true or false"
-    exit
+    echo "Config file use_cont must be either true or false, and cont_engine must be either apptainer or docker"
+    exit 1
 fi
