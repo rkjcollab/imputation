@@ -5,19 +5,20 @@ channels:
   - nodefaults
 dependencies:
   - python=3.11
-  - snakemake
-  - conda-forge::yq
-  - conda-forge::7zip=26.00
-  - bioconda::bcftools=1.22
-  - bioconda::crossmap=0.7.3
+  - bioconda::snakemake=9.27.1
+  - conda-forge::pulp=2.7.0  # pinned due to list solvers bug
+  - conda-forge::7zip=26.01
+  - bioconda::bcftools=1.24
+  - bioconda::crossmap=0.7.4
   - bioconda::vcftools=0.1.17
-  - bioconda::plink
-  - bioconda::plink2
+  - bioconda::plink=1.90
+  - bioconda::plink2=2.0.0a7.post13
   - conda-forge::r-base
-  - conda-forge::r-essentials
   - conda-forge::r-argparse
-  - conda-forge::r-lintr
-  - conda-forge::r-styler
   - conda-forge::jq
   - conda-forge::aria2
+  - conda-forge::requests
+  # Development tools
+  - conda-forge::r-lintr
+  - conda-forge::r-styler
   - conda-forge::pre-commit

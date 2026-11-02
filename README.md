@@ -12,28 +12,36 @@ Adapted from Michelle Daya's topmed_imputation pipeline.
 
 ### Apptainer
 
-To build apptainer on an x86_64 operating system, from the top level of this
-repository run:
+The apptainer image is built from the Docker image matching this release
+(`ghcr.io/rkjcollab/imputation:1.1.0`). From the top level of this repository run:
 
 ```
-apptainer build envs/topmed_imputation.sif envs/topmed_imputation.def
+apptainer build envs/env_imputation.sif docker://ghcr.io/rkjcollab/imputation:1.1.0
+```
 
+### Docker
+
+To use Docker instead of apptainer, set `cont_engine: "docker"` in the config file.
+The image matching this release (`ghcr.io/rkjcollab/imputation:1.1.0`) is pulled
+from GHCR. The image is built for linux/amd64, so it runs under emulation (slower)
+on Apple Silicon Macs. If needed, the image can instead be built from the top level
+of this repository with:
+
+```
+docker buildx build --platform linux/amd64 -t ghcr.io/rkjcollab/imputation:1.1.0 - < envs/Dockerfile
 ```
 
 ### Conda Environment
 
-To build mamba environment on a linux-64 or osx-64 operating system, run:
+To run without a container (`use_cont: false`), or for development, build the
+mamba environment on a linux-64, osx-64, or osx-arm64 operating system with:
 
 ```
 mamba env create -f envs/env_imputation.yml
 ```
 
-If running on an osx-arm64, use need to use an osx-64 subdir to ensure
-package availability (as of 11/12/2025, for PLINK2):
-
-```
-CONDA_SUBDIR=osx-64 mamba env create -f env_imputation.yml
-```
+Tool versions match the container, and the environment also includes
+development tools (lintr, styler, and pre-commit).
 
 ## Input Files
 
@@ -53,23 +61,27 @@ chr: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]  # list of chrom
 orig_build: "hg19"  #  either "hg19" or "hg38"
 to_build: "hg38"  # either "hg19" or "hg38"
 imp: "topmed"  # should be 'topmed', 'mich_hla_v1', 'mich_hla_v2', 'mich_1kg_p3_v5', 'mich_hrc'
-imp_rsq_filt: "0"  # filter to apply on imputation server (0, 0.001, 0.1, 0.2, or 0.3)
+imp_rsq_filt: "0"  # DEFAULT: "0", filter to apply on imputation server (0, 0.001, 0.1, 0.2, or 0.3)
 imp_name: "job-name"  # job name for imputation server
 imp_job_id: ""  # should be "job-####-##-###"
 zip_pw: ""  # add from email when imputed job finishes
-opt: "gt"  # option for "gt" only or "all" dosage information (much slower)
-use_cont: false  # true to use container, false to use local machine
+opt: "gt"  # DEFAULT: "gt", option for "gt" only or "all" dosage information (much slower)
+use_cont: true  # DEFAULT: true, true to use container, false to use local machine
+cont_engine: "apptainer"  # DEFAULT: "apptainer", container engine to use, either "apptainer" or "docker"
+sexcheck: [0.8, 0.2]  # DEFAULT: [0.8, 0.2]
 
 ### TODO: Update host paths outside container
 # PLINK1.9 file prefix with path - must be single file, but can contain one or more chr
-plink_prefix: "/path/to/plink"
-# ID list to calculate HWE filtering in (default is controls)
-id_list_hwe: "/path/to/crtls_id_list.txt"
-# Top-level directory for all output
+plink_prefix: "/path/to/plink_prefix"
+# OPTIONAL: ID list (FID IID) want to run imputation for, if none use ""
+id_list: ""
+# OPTIONAL: ID list to calculate HWE filtering in (likely controls), if none use ""
+id_list_hwe: ""
+# Top-level directory for all output - must contain the pre-QC PLINK1.9 file at
+# out_dir/pre_qc/pre_qc
 out_dir: "/path/to/output"
 # Repo with snakemake pipeline
-repo: "/Users/slacksa/repos/imputation_snakemake"
-
+repo: "/path/to/imputation"
 ```
 
 Note that some variables (imp_job_id & zip_pw) will need to be added to the config file as
@@ -89,7 +101,8 @@ report. For Michigan imputation, the 'population' option is set to 'off', since 
 for 1000G whole genome imputation) there is no good option for allele frequency comparison
 for mixed populations. Either way, imputation results should not be affected.
 
-*TODO: add note about activating conda environment if set use_cont to false.*
+If `use_cont` is set to false, activate the conda environment before running the
+pipeline with `mamba activate imputation`.
 
 ### Step 2
 
@@ -180,7 +193,7 @@ TODO: add detail for this. CI/CD on GitHub will check styler and linter.
 Recommend using pre commit hook locally first always:
 
 ```
-## pip install pre-commit # not needed since in conda env?
+mamba activate imputation  # pre-commit is included in the conda environment
 pre-commit install
 
 ```

@@ -1,0 +1,26 @@
+# Builds the Docker image and pushes it to GHCR when you push a tag like v1.1.0.
+# The tag must match the image hardcoded in run_snakemake.sh.
+
+name: Push image to GHCR
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and push
+        run: |
+          IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker build -t $IMAGE:$VERSION -t $IMAGE:latest - < envs/Dockerfile
+          docker push --all-tags $IMAGE

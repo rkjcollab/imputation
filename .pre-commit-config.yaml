@@ -10,7 +10,8 @@ repos:
 
   # R hooks
   - repo: https://github.com/lorenzwalthert/precommit
-    rev: v0.4.3
+    # Commit after v0.4.3 since no newer version available yet
+    rev: 01474ea79fcbb71421e7f8faed2c63ff4c3a51ce
     hooks:
       - id: style-files
       - id: parsable-R
