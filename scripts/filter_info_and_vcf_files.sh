@@ -50,11 +50,16 @@ if [ "$option" = "gt" ]; then
     # Filter VCF to these IDs using PLINK, keeping GT
     if [ "$chr" = "X" ]; then
         # If chrX, PLINK throws error without sex information
+
+        # VCF sample IDs are FID_IID as written by PLINK 1.9 --recode vcf. Make
+        # temp PSAM with correct IDs instead of using delim which errors when
+        # IDs have internal delim
+        awk 'BEGIN{OFS="\t"; print "#IID","SEX"} {print $1"_"$2, $5}' \
+            "${plink_prefix}.fam" > "${out_dir}/tmp_chr${chr}.psam"
         plink2 --vcf "${in_dir}/chr${chr}.dose.vcf.gz" \
             --export vcf 'bgz' \
             --extract "${out_dir}/chr${chr}_maf${maf}_rsq${rsq}_snps.txt" \
-            --id-delim '_' \
-            --fam "${plink_prefix}.fam" \
+            --psam "${out_dir}/tmp_chr${chr}.psam" \
             --out "${out_dir}/tmp_chr${chr}_clean"
     else
         plink2 --vcf "${in_dir}/chr${chr}.dose.vcf.gz" \
