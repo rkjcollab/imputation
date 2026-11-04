@@ -56,7 +56,7 @@ rule filter_info_and_vcf_files_helper:
     log:
         f"{out_dir}/imputed_clean_maf{maf}_rsq{rsq}/chr{{chr}}_filter_info_and_vcf_files.log"
     params:
-        script=f'{code_dir}/scripts/filter_info_and_vcf_files{"_bcftools" if opt == "all" else ""}.sh'
+        script=Path(code_dir, "scripts/filter_info_and_vcf_files.sh")
     shell:
         """
         bash {params.script} \

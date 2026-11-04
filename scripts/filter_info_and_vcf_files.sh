@@ -72,7 +72,8 @@ if [ "$option" = "gt" ]; then
 elif [ "$option" = "all" ]; then
     # Filter VCF to these IDs using bcftools
     # NOTE: will add sex information at conversion to PLINK in later script
-    bcftools view --include ID==@"$snp_list" "${in_dir}/chr${chr}.dose.vcf.gz" \
+    bcftools view --include ID==@"${out_dir}/chr${chr}_maf${maf}_rsq${rsq}_snps.txt" \
+        "${in_dir}/chr${chr}.dose.vcf.gz" \
         -Oz -o "${out_dir}/tmp_chr${chr}_clean.vcf.gz"
 fi
 
