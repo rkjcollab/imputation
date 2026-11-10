@@ -7,7 +7,6 @@
 # be made for each different imputation.
 
 ### TODO: Update pipeline settings
-# Default filters of MAF 0 and Rsq 0.3 are applied after imputation.
 chr: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]  # list of chromosome numbers with format [1,10,22]
 orig_build: "hg19"  #  either "hg19" or "hg38"
 to_build: "hg38"  # either "hg19" or "hg38"
@@ -20,6 +19,8 @@ opt: "gt"  # DEFAULT: "gt", option for "gt" only or "all" dosage information (mu
 use_cont: true  # DEFAULT: true, true to use container, false to use local machine
 cont_engine: "apptainer"  # DEFAULT: "apptainer", container engine to use, either "apptainer" or "docker"
 sexcheck: [0.8, 0.2]  # DEFAULT: [0.8, 0.2]
+maf: "0"  # DEFAULT: "0", MAF filter applied after imputation
+rsq: "0.3"  # DEFAULT: "0.3", Rsq filter applied to imputed variants after imputation
 
 ### TODO: Update host paths outside container
 # PLINK1.9 file prefix with path - must be single file, but can contain one or more chr

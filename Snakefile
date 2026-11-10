@@ -17,6 +17,8 @@ imp_rsq_filt: str = config.get("imp_rsq_filt", "0")
 opt: str = config.get("opt", "gt")
 use_cont: bool = config.get("use_cont", True)
 sexcheck: list[str] = config.get("sexcheck", ["0.8", "0.2"])
+maf: str = config.get("maf", "0")
+rsq: str = config.get("rsq", "0.3")
 
 # Required host paths outside container
 plink_prefix: str = config["plink_prefix"]
@@ -41,10 +43,6 @@ chr_noY_str = " ".join(map(str, chr_noY))
 sexcheck_str = " ".join(map(str, sexcheck))
 
 ### Other prep
-# Set default values currently not controlled by config file
-maf = "0"
-rsq = "0.3"
-
 # Get dir of pipeline
 code_dir = workflow.current_basedir
 
