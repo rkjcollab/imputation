@@ -74,7 +74,7 @@ repo=$(sed 's/#.*//' "$config" | grep "^repo:" | cut -d':' -f2 | tr -d ' "')
 use_cont=$(sed 's/#.*//' "$config" | grep "^use_cont:" | cut -d':' -f2 | tr -d ' "')
 cont_engine=$(sed 's/#.*//' "$config" | grep "^cont_engine:" | cut -d':' -f2 | tr -d ' "')
 cont_engine=${cont_engine:-apptainer}
-docker_image="ghcr.io/rkjcollab/imputation:1.1.3"  # image matching this release
+docker_image="ghcr.io/rkjcollab/imputation:1.1.4"  # image matching this release
 
 # Container paths - fixed here rather than in the config file, and passed to
 # snakemake with --config since the Snakefile needs them inside the container
