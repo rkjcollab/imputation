@@ -55,7 +55,7 @@ check_file_exists "${plink_prefix}.bim"
 ct_var_plink_prefix=$(awk 'END{print NR}' "${plink_prefix}.bim")
 ct_samp_plink_prefix=$(awk 'END{print NR}' "${plink_prefix}.fam")
 echo -e "Summary\tRaw data counts\t${ct_samp_plink_prefix}\t${ct_var_plink_prefix}" >> "$log_file"
-echo -e "Summary\tChr in file: ${chr[@]}\t()\t()"
+echo -e "Summary\tChr in file: ${chr[@]}\t()\t()" >> "$log_file"
 
 # Subset to list of IDs, if provided
 plink_prefix_name=$(basename "${plink_prefix}")
