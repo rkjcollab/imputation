@@ -33,7 +33,7 @@ out_dir="${dir}/imputed_clean_maf${maf}_rsq${rsq}"
 mkdir -p "${dir}/imputed_clean_maf${maf}_rsq${rsq}"
 
 # Set filter
-to_filt="((INFO/TYPED = 1 | (INFO/IMPUTED = 1 & INFO/R2 > ${rsq})) & INFO/MAF > ${maf})"
+to_filt="((INFO/TYPED = 1 | (INFO/IMPUTED = 1 & INFO/R2 >= ${rsq})) & INFO/MAF >= ${maf})"
 
 # Filter INFO file, for smaller output with kept variables
     # ((typed OR (imputed & R2)) & MAF)
