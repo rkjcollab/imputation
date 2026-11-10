@@ -21,6 +21,7 @@ bcftools concat \
    --file-list "${dir}/imputed_cleaned_file_list.txt" \
    --output-type z \
    --output "${dir}/chr_all_concat.vcf.gz"
+bcftools index "${dir}/chr_all_concat.vcf.gz"
 
 # VCF sample IDs are FID_IID as written by PLINK 1.9 --recode vcf. Make
 # temp PSAM with correct IDs instead of using delim which errors when
